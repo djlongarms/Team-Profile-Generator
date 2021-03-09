@@ -12,32 +12,84 @@ const render = require("./lib/htmlRenderer");
 
 let employees = []
 
-inquirer.prompt([
-  {
-    type: 'list',
-    name: 'class',
-    message: 'What classification does this employee have?',
-    choices: ['Employee', 'Engineer', 'Intern', 'Manager']
-  },
-  {
-    type: 'input',
-    name: 'name',
-    message: "What is this employee's name?"
-  },
-  {
-    type: 'number',
-    name: 'id',
-    message: "What is this employee's id number?"
-  }
-])
-  .then(res => {
+const addEmployee = () => {
 
+  inquirer.prompt([
+    {
+      type: 'list',
+      name: 'class',
+      message: 'What classification does this employee have?',
+      choices: ['Engineer', 'Intern', 'Manager'],
+    },
+    {
+      type: 'input',
+      name: 'name',
+      message: "What is this employee's name?",
+    },
+    {
+      type: 'number',
+      name: 'id',
+      message: "What is this employee's id number?",
+    },
+    {
+      type: 'input',
+      name: 'email',
+      message: "What is this employee's email?",
+    }
+  ])
+    .then(generalInfo => {
+      let newEmployee = ''
+      let finalQuestion = "What is this employee's "
+      switch (generalInfo.class) {
+        case 'Engineer':
+          finalQuestion += 'Github username?'
+          break
+        case 'Intern':
+          finalQuestion += 'school?'
+          break
+        case 'Manager':
+          finalQuestion += 'office number?'
+          break
+      }
+      inquirer.prompt({
+        type: 'input',
+        name: 'response',
+        message: finalQuestion,
+      })
+        .then(specificInfo => {
+          switch (generalInfo.class) {
+            case 'Engineer':
+              employees.push(new Engineer(generalInfo.name, generalInfo.id, generalInfo.email, specificInfo.response))
+              break
+            case 'Intern':
+              employees.push(new Intern(generalInfo.name, generalInfo.id, generalInfo.email, specificInfo.response))
+              break
+            case 'Manager':
+              employees.push(new Manager(generalInfo.name, generalInfo.id, generalInfo.email, specificInfo.response))
+              break
+          }
+          inquirer.prompt({
+            type: 'confirm',
+            name: 'continue',
+            message: 'Add another employee?'
+          })
+            .then(res => {
+              if (res.continue) {
+                addEmployee()
+              } else {
+                console.log(employees)
+                fs.writeFile(outputPath, render(employees), err => {
+                  if (err) { console.log(err) }
+                })
+              }
+            })
+            .catch(error => console.log(error))
+      })
   })
-  .catch(err => console.log(err))
+  .catch (err => console.log(err))
+}
 
-fs.writeFile(outputPath, render(employees), err => {
-  if (err) { console.log(err) }
-})
+addEmployee()
 
 // Write code to use inquirer to gather information about the development team members,
 // and to create objects for each team member (using the correct classes as blueprints!)
@@ -53,7 +105,7 @@ fs.writeFile(outputPath, render(employees), err => {
 // does not.
 
 // HINT: each employee type (manager, engineer, or intern) has slightly different
-// information; write your code to ask different questions via inquirer depending on
+// information; write your code to ask different Info via inquirer depending on
 // employee type.
 
 // HINT: make sure to build out your classes first! Remember that your Manager, Engineer,
